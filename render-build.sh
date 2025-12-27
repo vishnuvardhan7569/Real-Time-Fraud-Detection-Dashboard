@@ -8,7 +8,8 @@ npm install
 
 echo "--- Installing Client Dependencies ---"
 cd ../client
-npm install
+# Force install devDependencies (needed for Vite build) even if NODE_ENV=production
+npm install --include=dev
 
 echo "--- Building Client ---"
 npm run build
