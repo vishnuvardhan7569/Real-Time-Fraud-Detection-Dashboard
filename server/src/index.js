@@ -10,7 +10,7 @@ import { fileURLToPath } from 'url';
 import authRoutes from './routes/authRoutes.js';
 import Transaction from './models/Transaction.js';
 import { authenticateToken } from './middleware/auth.js';
-import { startMockTransactions } from './services/transactionGenerator.js';
+import { startMockTransactions, stopMockTransactions, getSimulationStatus } from './services/transactionGenerator.js';
 
 dotenv.config();
 
@@ -39,6 +39,27 @@ mongoose.connect(MONGO_URI)
 
 // API Routes
 app.use('/api/auth', authRoutes);
+
+// Simulation Control Routes
+app.post('/api/simulation/start', authenticateToken, (req, res) => {
+  if (getSimulationStatus()) {
+    return res.status(400).json({ message: 'Simulation is already running' });
+  }
+  startMockTransactions(io);
+  res.json({ message: 'Simulation started', status: true });
+});
+
+app.post('/api/simulation/stop', authenticateToken, (req, res) => {
+  if (!getSimulationStatus()) {
+    return res.status(400).json({ message: 'Simulation is not running' });
+  }
+  stopMockTransactions();
+  res.json({ message: 'Simulation stopped', status: false });
+});
+
+app.get('/api/simulation/status', authenticateToken, (req, res) => {
+  res.json({ status: getSimulationStatus() });
+});
 
 app.get('/api/transactions', authenticateToken, async (req, res) => {
   const transactions = await Transaction.find().sort({ timestamp: -1 }).limit(50);

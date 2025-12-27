@@ -1,6 +1,9 @@
 import { analyzeTransaction } from './aiService.js';
 import Transaction from '../models/Transaction.js';
 
+let intervalId = null;
+let isRunning = false;
+
 const generateMockTransaction = () => {
   const amount = Math.floor(Math.random() * 50000) + 500; // ₹500 to ₹50,000
   const categories = ['Electronics', 'Fashion', 'Home & Garden', 'Luxury', 'Services', 'Groceries'];
@@ -29,7 +32,13 @@ const generateMockTransaction = () => {
 };
 
 export const startMockTransactions = (io) => {
-  setInterval(async () => {
+  if (isRunning) return; // Prevent duplicate intervals
+
+  console.log('Starting transaction simulation...');
+  isRunning = true;
+  
+  // Create the interval function
+  const runSimulation = async () => {
     const rawTransaction = generateMockTransaction();
     
     // Analyze with AI
@@ -44,16 +53,31 @@ export const startMockTransactions = (io) => {
     try {
       const savedTransaction = await new Transaction(fullTransaction).save();
       
-      // console.log(`Generated: ${savedTransaction.location} - ₹${savedTransaction.amount}`);
-      
       // Emit to all connected clients
-      io.emit('newTransaction', savedTransaction);
-      
-      if (savedTransaction.riskLevel === 'High') {
-        io.emit('fraudAlert', savedTransaction);
+      if (io) {
+        io.emit('newTransaction', savedTransaction);
+        
+        if (savedTransaction.riskLevel === 'High') {
+          io.emit('fraudAlert', savedTransaction);
+        }
       }
     } catch (error) {
       console.error('Error saving transaction:', error);
     }
-  }, 10000); // Generate every 10 seconds
+  };
+
+  // Run immediately then set interval
+  // runSimulation(); // Optional: run one immediately
+  intervalId = setInterval(runSimulation, 10000); // Generate every 10 seconds
 };
+
+export const stopMockTransactions = () => {
+  if (intervalId) {
+    clearInterval(intervalId);
+    intervalId = null;
+  }
+  isRunning = false;
+  console.log('Transaction simulation stopped.');
+};
+
+export const getSimulationStatus = () => isRunning;

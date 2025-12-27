@@ -5,6 +5,7 @@ import axios from 'axios';
 import { addTransaction, logout, setTransactions } from './store/fraudSlice';
 import TransactionTable from './components/TransactionTable';
 import RiskChart from './components/RiskChart';
+import SimulationControl from './components/SimulationControl';
 import AlertsPanel from './components/AlertsPanel';
 import LoginPage from './pages/LoginPage';
 import { ShieldAlert, BarChart3, List, LogOut } from 'lucide-react';
@@ -117,6 +118,9 @@ function App() {
           {/* Alerts Sidebar */}
           <div className="col-lg-4">
             <div className="h-100 d-flex flex-column gap-4">
+                <div className="flex-grow-0">
+                    <SimulationControl />
+                </div>
                 <div className="flex-grow-1">
                     <AlertsPanel />
                 </div>
