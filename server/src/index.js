@@ -57,6 +57,18 @@ app.post('/api/simulation/stop', authenticateToken, (req, res) => {
   res.json({ message: 'Simulation stopped', status: false });
 });
 
+app.post('/api/simulation/reset', authenticateToken, async (req, res) => {
+  try {
+    await Transaction.deleteMany({});
+    // Notify all clients to clear their local state
+    io.emit('databaseReset');
+    res.json({ message: 'Database reset successful' });
+  } catch (error) {
+    console.error('Error resetting database:', error);
+    res.status(500).json({ message: 'Failed to reset database' });
+  }
+});
+
 app.get('/api/simulation/status', authenticateToken, (req, res) => {
   res.json({ status: getSimulationStatus() });
 });

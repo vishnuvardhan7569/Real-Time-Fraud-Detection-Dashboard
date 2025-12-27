@@ -32,9 +32,13 @@ export const fraudSlice = createSlice({
       state.isAuthenticated = false;
       state.user = null;
       localStorage.removeItem('token');
+    },
+    clearTransactions: (state) => {
+      state.transactions = [];
+      state.alerts = [];
     }
   },
 });
 
-export const { addTransaction, setTransactions, loginSuccess, logout } = fraudSlice.actions;
+export const { addTransaction, setTransactions, loginSuccess, logout, clearTransactions } = fraudSlice.actions;
 export default fraudSlice.reducer;

@@ -2,11 +2,11 @@ import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { io } from 'socket.io-client';
 import axios from 'axios';
-import { addTransaction, logout, setTransactions } from './store/fraudSlice';
+import { addTransaction, logout, setTransactions, clearTransactions } from './store/fraudSlice';
 import TransactionTable from './components/TransactionTable';
 import RiskChart from './components/RiskChart';
-import SimulationControl from './components/SimulationControl';
 import AlertsPanel from './components/AlertsPanel';
+import SimulationControl from './components/SimulationControl';
 import LoginPage from './pages/LoginPage';
 import { ShieldAlert, BarChart3, List, LogOut } from 'lucide-react';
 import { ToastContainer, toast } from 'react-toastify';
@@ -49,6 +49,11 @@ function App() {
         });
       });
 
+      socket.on('databaseReset', () => {
+        dispatch(clearTransactions());
+        toast.info("Database has been reset by an administrator.");
+      });
+
       // Handle Authentication Errors
       socket.on('connect_error', (err) => {
         if (err.message.includes("Authentication error")) {
@@ -61,6 +66,7 @@ function App() {
     return () => {
       socket.off('newTransaction');
       socket.off('fraudAlert');
+      socket.off('databaseReset');
       socket.off('connect_error');
       if (!isAuthenticated) socket.disconnect();
     };

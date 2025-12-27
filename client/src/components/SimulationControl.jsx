@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Play, Pause, Activity } from 'lucide-react';
+import { Play, Pause, Activity, RotateCcw } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 
@@ -45,31 +45,56 @@ const SimulationControl = () => {
     }
   };
 
+  const resetDatabase = async () => {
+    if (!window.confirm("Are you sure? This will delete ALL transaction history.")) return;
+    
+    try {
+        const res = await axios.post('/api/simulation/reset', {}, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        toast.success(res.data.message);
+    } catch (err) {
+        toast.error("Failed to reset database");
+        console.error(err);
+    }
+  };
+
   return (
     <div className="card border-0 p-4 mb-4">
       <h6 className="fw-bold mb-3 text-secondary text-uppercase small ls-wider">Simulation Control</h6>
       
-      <div className="d-flex align-items-center justify-content-between mb-3 p-3 rounded bg-light border">
-        <div className="d-flex align-items-center">
-            <Activity className={`me-2 ${isRunning ? 'text-success' : 'text-muted'}`} size={20} />
-            <div>
-                <div className="fw-bold text-dark">{isRunning ? 'Running' : 'Paused'}</div>
-                <div className="small text-muted">{isRunning ? 'Generating transactions...' : 'System idle'}</div>
+      <div className="d-flex flex-column gap-3">
+        {/* Status & Toggle */}
+        <div className="d-flex align-items-center justify-content-between p-3 rounded bg-light border">
+            <div className="d-flex align-items-center">
+                <Activity className={`me-2 ${isRunning ? 'text-success' : 'text-muted'}`} size={20} />
+                <div>
+                    <div className="fw-bold text-dark">{isRunning ? 'Running' : 'Paused'}</div>
+                    <div className="small text-muted">{isRunning ? 'Generating transactions...' : 'System idle'}</div>
+                </div>
             </div>
+            
+            <button 
+                onClick={toggleSimulation} 
+                disabled={loading}
+                className={`btn btn-sm ${isRunning ? 'btn-outline-warning' : 'btn-success'} d-flex align-items-center gap-2`}
+            >
+                {loading ? (
+                    <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                ) : isRunning ? (
+                    <><Pause size={16} /> Pause</>
+                ) : (
+                    <><Play size={16} /> Start</>
+                )}
+            </button>
         </div>
-        
+
+        {/* Reset Button */}
         <button 
-            onClick={toggleSimulation} 
-            disabled={loading}
-            className={`btn btn-sm ${isRunning ? 'btn-outline-warning' : 'btn-success'} d-flex align-items-center gap-2`}
+            onClick={resetDatabase}
+            className="btn btn-sm btn-outline-danger w-100 d-flex align-items-center justify-content-center gap-2"
         >
-            {loading ? (
-                <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-            ) : isRunning ? (
-                <><Pause size={16} /> Pause</>
-            ) : (
-                <><Play size={16} /> Start</>
-            )}
+            <RotateCcw size={16} /> Reset Database
         </button>
       </div>
     </div>
