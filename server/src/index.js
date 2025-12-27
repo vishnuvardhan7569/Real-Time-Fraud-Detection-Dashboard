@@ -10,7 +10,7 @@ import { fileURLToPath } from 'url';
 import authRoutes from './routes/authRoutes.js';
 import Transaction from './models/Transaction.js';
 import { authenticateToken } from './middleware/auth.js';
-import { startMockTransactions, stopMockTransactions, getSimulationStatus } from './services/transactionGenerator.js';
+import { startMockTransactions, stopMockTransactions, getSimulationStatus, triggerFraudTransaction } from './services/transactionGenerator.js';
 
 dotenv.config();
 
@@ -55,6 +55,11 @@ app.post('/api/simulation/stop', authenticateToken, (req, res) => {
   }
   stopMockTransactions();
   res.json({ message: 'Simulation stopped', status: false });
+});
+
+app.post('/api/simulation/trigger-fraud', authenticateToken, async (req, res) => {
+    await triggerFraudTransaction(io);
+    res.json({ message: 'Fraud attack simulated!' });
 });
 
 app.post('/api/simulation/reset', authenticateToken, async (req, res) => {

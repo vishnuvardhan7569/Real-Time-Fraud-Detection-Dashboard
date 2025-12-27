@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Play, Pause, Activity, RotateCcw } from 'lucide-react';
+import { Play, Pause, Activity, RotateCcw, Zap } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 
@@ -42,6 +42,17 @@ const SimulationControl = () => {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const triggerFraud = async () => {
+    try {
+        await axios.post('/api/simulation/trigger-fraud', {}, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        toast.warning("Simulating Fraud Attack!");
+    } catch (err) {
+        toast.error("Failed to trigger attack");
     }
   };
 
@@ -88,6 +99,14 @@ const SimulationControl = () => {
                 )}
             </button>
         </div>
+
+        {/* Attack Button */}
+        <button 
+            onClick={triggerFraud}
+            className="btn btn-sm btn-danger w-100 d-flex align-items-center justify-content-center gap-2 fw-bold"
+        >
+            <Zap size={16} /> Simulate Attack
+        </button>
 
         {/* Reset Button */}
         <button 

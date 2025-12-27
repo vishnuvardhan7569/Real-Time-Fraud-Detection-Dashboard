@@ -80,4 +80,41 @@ export const stopMockTransactions = () => {
   console.log('Transaction simulation stopped.');
 };
 
+export const triggerFraudTransaction = async (io) => {
+    console.log("Triggering manual fraud attack...");
+    const rawTransaction = {
+        userId: `hacker_${Math.floor(Math.random() * 99)}`,
+        amount: Math.floor(Math.random() * 50000) + 95000, // ₹95,000 - ₹1,45,000
+        category: 'Electronics', // High value target
+        location: 'Unknown Location (VPN)',
+        timestamp: new Date(),
+        device: 'Rooted Device / Emulator',
+        ipAddress: '192.168.0.1 (Tor Exit Node)'
+    };
+
+    // Analyze with AI
+    const analysis = await analyzeTransaction(rawTransaction);
+    
+    // Force High Risk if AI misses it (for demo reliability)
+    if (analysis.riskLevel !== 'High') {
+        analysis.fraudRiskScore = 95;
+        analysis.riskLevel = 'High';
+        analysis.reason = '[Demo Override] High value transaction from suspicious IP.';
+    }
+
+    const fullTransaction = { ...rawTransaction, ...analysis };
+
+    try {
+        const savedTransaction = await new Transaction(fullTransaction).save();
+        if (io) {
+            io.emit('newTransaction', savedTransaction);
+            io.emit('fraudAlert', savedTransaction);
+        }
+        return savedTransaction;
+    } catch (error) {
+        console.error('Error generating fraud:', error);
+        return null;
+    }
+};
+
 export const getSimulationStatus = () => isRunning;
