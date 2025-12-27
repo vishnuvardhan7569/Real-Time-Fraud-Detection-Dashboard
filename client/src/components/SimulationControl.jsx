@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Play, Pause, Activity, RotateCcw, Zap } from 'lucide-react';
+import { Play, Pause, Activity, RotateCcw, Zap, Download } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 
 const SimulationControl = () => {
   const [isRunning, setIsRunning] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { token } = useSelector((state) => state.fraud);
+  const { token, transactions } = useSelector((state) => state.fraud);
 
   useEffect(() => {
     fetchStatus();
@@ -70,6 +70,47 @@ const SimulationControl = () => {
     }
   };
 
+  const exportCSV = () => {
+    if (!transactions || transactions.length === 0) {
+        toast.info("No data to export.");
+        return;
+    }
+
+    const headers = ["ID", "Timestamp", "Location", "Category", "Amount (INR)", "Risk Score", "Risk Level", "Device", "IP"];
+    
+    const csvRows = [
+        headers.join(','), // Header row
+        ...transactions.map(t => {
+            const date = new Date(t.timestamp).toLocaleString().replace(/,/g, '');
+            // Escape values to prevent CSV breakages
+            const clean = (val) => `"${String(val).replace(/"/g, '""')}"`;
+            
+            return [
+                clean(t._id),
+                clean(date),
+                clean(t.location),
+                clean(t.category),
+                clean(t.amount),
+                clean(t.fraudRiskScore),
+                clean(t.riskLevel),
+                clean(t.device),
+                clean(t.ipAddress)
+            ].join(',');
+        })
+    ];
+
+    const csvContent = "data:text/csv;charset=utf-8," + csvRows.join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `fraud_report_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast.success("Report downloaded successfully!");
+  };
+
   return (
     <div className="card border-0 p-4 mb-4">
       <h6 className="fw-bold mb-3 text-secondary text-uppercase small ls-wider">Simulation Control</h6>
@@ -100,20 +141,31 @@ const SimulationControl = () => {
             </button>
         </div>
 
-        {/* Attack Button */}
-        <button 
-            onClick={triggerFraud}
-            className="btn btn-sm btn-danger w-100 d-flex align-items-center justify-content-center gap-2 fw-bold"
-        >
-            <Zap size={16} /> Simulate Attack
-        </button>
+        {/* Action Buttons Row */}
+        <div className="d-flex gap-2">
+            <button 
+                onClick={triggerFraud}
+                className="btn btn-sm btn-danger flex-grow-1 d-flex align-items-center justify-content-center gap-2 fw-bold"
+                title="Force a High Risk Transaction"
+            >
+                <Zap size={16} /> Simulate Attack
+            </button>
 
-        {/* Reset Button */}
+            <button 
+                onClick={resetDatabase}
+                className="btn btn-sm btn-outline-danger flex-grow-1 d-flex align-items-center justify-content-center gap-2"
+                title="Clear all history"
+            >
+                <RotateCcw size={16} /> Reset DB
+            </button>
+        </div>
+
+        {/* Export Button */}
         <button 
-            onClick={resetDatabase}
-            className="btn btn-sm btn-outline-danger w-100 d-flex align-items-center justify-content-center gap-2"
+            onClick={exportCSV}
+            className="btn btn-sm btn-outline-primary w-100 d-flex align-items-center justify-content-center gap-2"
         >
-            <RotateCcw size={16} /> Reset Database
+            <Download size={16} /> Download Report (CSV)
         </button>
       </div>
     </div>
